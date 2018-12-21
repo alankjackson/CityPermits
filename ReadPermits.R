@@ -22,19 +22,13 @@ census_geocoder <- function(address,type,secondary,state){
     
     state <- paste("state=",gsub(" ","+",state),sep="") 
     string <-  paste("https://geocoding.geo.census.gov/geocoder/geographies/address?",addy,"&",wild,"&",state,"&benchmark=4&vintage=4&format=json",sep="")
-    #print(paste("-1->", string))
     json_file<-fromJSON(getURL(string))
-    #print(paste("-2->", json_file))
 
     #Check if there are results
-    ###if(length(json_file$result$addressMatches$coordinates)>0){
-    #print(paste("--2.5-->",json_file$result$addressMatches))
     if(length(json_file$result$addressMatches)>0){
-      #print("-3-")
       
       #If not, kick back an empty dataframe
       if(is.null(json_file$result$addressMatches$coordinates$x[1])==TRUE){
-      #print("-4-")
         print("no result")
         return(data.frame(
           address="",
@@ -45,7 +39,6 @@ census_geocoder <- function(address,type,secondary,state){
         
       } else{
 
-      #print("-5-")
         #  Address,lat,lon,tract, block (keep first match)
         address <- as.character(data.frame(json_file$result$addressMatches$matchedAddress)[1,])
         lat <- as.character(json_file$result$addressMatches$coordinates$y[1])
@@ -126,13 +119,19 @@ for (i in 1:nrow(rpt)) {
   Sys.sleep(1)
 }
 
-## Save output
+##  Fix stupid Clutch City thing
 
+rpt$match <- str_replace(rpt$match, "CLUTCH CITY", "HOUSTON")
+
+## Save output
 
 
 outputfile <- paste(Start_Date,End_Date,sep="_")
 outputfile <- str_replace_all(outputfile,"/","_")
-saveRDS(rpt, paste("~/Dropbox/Rprojects/CityPermits/",outputfile,".rds", sep=""))
+
+print(paste("=========",outputfile,"=========="))
+
+saveRDS(rpt, paste("/home/ajackson/Dropbox/Rprojects/CityPermits/",outputfile,".rds", sep=""))
 
 print("------ and we are done")
 
