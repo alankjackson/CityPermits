@@ -12,8 +12,15 @@ library(ggplot2)
 library("lubridate")
 library(ggmap)
 
+apikey <- "***REMOVED***"
 
-permits <- readRDS("~/Dropbox/Rprojects/CityPermits/StructuralPermits.rds")
+
+#permits <- readRDS("~/Dropbox/Rprojects/CityPermits/StructuralPermits.rds")
+
+permits <- list.files(path="~/Rprojects/CityPermits",
+                      pattern="^201[89].*rds$") %>%
+  purrr::set_names(.) %>%
+  map_dfr(readRDS)
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -46,8 +53,8 @@ harvey <- permits %>%
 
 ```{r map }
 
-permits$lat <- as.numeric(permits$lat)
-permits$lon <- as.numeric(permits$lon)
+permits$lat <- as.numeric(permits$Lat)
+permits$lon <- as.numeric(permits$Lon)
 
 pal <- colorFactor(c("navy", "red"), domain = c("Building Pmt", "DEMOLITION"))
 
