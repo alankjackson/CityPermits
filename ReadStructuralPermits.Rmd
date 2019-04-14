@@ -43,7 +43,77 @@ names(Permits) <- c("Lon", "Lat", "ID", "Address", "Description", "Date")
 
 ```{r Save output, echo=FALSE}
 
-saveRDS(rpt, paste("~/Dropbox/Rprojects/CityPermits/StructuralPermits.rds", sep=""))
+saveRDS(Permits, paste("~/Dropbox/Rprojects/CityPermits/StructuralPermits.rds", sep=""))
+
+```
+
+##  geocoder from permit database
+
+```{r geocoding file}
+
+library(postmastr)
+
+geo1 <- pm_identify(Permits, var="Address")
+geo2 <- pm_prep(geo1, var="Address")
+
+#   zip
+
+pm_postal_none(geo2)
+geo2 <- pm_postal_detect(geo2) %>% 
+  filter(pm.hasZip==TRUE) %>% 
+  select(-pm.hasZip)
+geo2 <- pm_postal_parse(geo2)
+
+#   No city or state
+
+#   house numbers
+
+geo2 <- pm_house_parse(geo2)
+
+#   Street names have odd letters in front of them sometimes
+
+geo2$pm.address <- str_remove(geo2$pm.address, "^[A-D,F-H,M,R] ")
+
+#   House numbers may have attached unit numbers
+
+geo2$pm.house <- str_remove(geo2$pm.house, "[A-Z#][0-9]*")
+
+#   parse directionals and suffixes
+
+geo2 <- pm_streetDir_parse(geo2)
+geo2 <- pm_streetSuf_parse(geo2)
+
+#   Street names
+
+geo2 <- pm_street_parse(geo2)
+
+#   Add parsed bits back into original
+
+geo3 <- pm_replace(geo2, source=geo1)
+
+#   Rebuild addresses
+
+geo3 <- pm_rebuild(geo3, start=pm.preDir, end=pm.sufDir, keep_parsed="yes")
+
+#   Create block range
+
+geo3 <- geo3 %>% 
+  mutate(block_range=paste0(
+                 as.character(round(as.numeric(pm.house)/100)),
+                 "00-",
+                 as.character(round(as.numeric(pm.house)/100)),
+                 "99"
+                 ))
+
+#   remove duplicates
+
+geo3 <- geo3 %>% 
+  select(Lon, Lat, Address, block_range, pm.house, pm.address, pm.zip) 
+
+geo3 <- geo3 %>% 
+  unique()
+
+saveRDS(geo3, "~/Dropbox/CrimeStats/PermitDB_Geocode.rds")
 
 ```
 
