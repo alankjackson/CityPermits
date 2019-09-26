@@ -1,0 +1,52 @@
+---
+title: "Merge and Clean weekly updates"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(lubridate)
+
+path <- "/home/ajackson/Dropbox/Rprojects/CityPermits"
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##  Read in and merge weekly update files
+
+```{r merge files}
+
+# list of files
+
+permit_list <- list.files(path=path , pattern = "20.*.rds", full.names = TRUE)
+
+# build empty tibble to be added to
+
+DF <- tibble(Zip=character(),
+             Permit_Date=as.Date(character()),
+             Permit_Type=character(),
+             Permit_Number=character(),
+             Address=character(),
+             Comments=character(),
+             match=character(),
+             lat=numeric(),
+             lon=numeric(),
+             tract=character(),
+             block=character())
+
+# Read a file in, do date and numeric conversion, and then join to master
+
+for (infile in permit_list){
+  tmp <- readRDS(infile)
+  tmp <- tmp %>%  mutate(Permit_Date=as.Date(Permit_Date, format= "%Y/%m/%d"))
+  tmp$Permit_Date <- ymd(tmp$Permit_Date)
+  tmp$lat <- as.numeric(tmp$lat)
+  tmp$lon <- as.numeric(tmp$lon)
+  DF <- bind_rows(DF, tmp)
+}
+
+
+```
+
+
+
