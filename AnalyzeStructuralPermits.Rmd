@@ -20,7 +20,8 @@ apikey <- "AIzaSyCTIGY8CeyCmpW6l4Z9hHOs1aKvTo9N7eQ"
 permits <- list.files(path="~/Rprojects/CityPermits",
                       pattern="^201[89].*rds$") %>%
   purrr::set_names(.) %>%
-  map_dfr(readRDS)
+  map_dfr(readRDS) %>%
+  rename(Description=Comments, Date=Permit_Date)
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
