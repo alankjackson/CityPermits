@@ -7,6 +7,7 @@ output: html_document
 library(tidyverse)
 library(lubridate)
 
+
 path <- "/home/ajackson/Dropbox/Rprojects/CityPermits"
 
 knitr::opts_chunk$set(echo = TRUE)
