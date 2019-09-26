@@ -103,7 +103,7 @@ geo3 <- geo3 %>%
                  "00-",
                  as.character(round(as.numeric(pm.house)/100)),
                  "99"
-                 ))
+                 )) 
 
 #   remove duplicates
 
@@ -111,7 +111,14 @@ geo3 <- geo3 %>%
   select(Lon, Lat, Address, block_range, pm.house, pm.address, pm.zip) 
 
 geo3 <- geo3 %>% 
+  na.omit() %>% 
   unique()
+
+geo3 <- geo3 %>% 
+  mutate(Address=paste0(block_range, " ", 
+                       pm.address, " , ", 
+                       "Houston, TX", " ",
+                       pm.zip))
 
 saveRDS(geo3, "~/Dropbox/CrimeStats/PermitDB_Geocode.rds")
 
