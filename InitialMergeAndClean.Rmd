@@ -29,5 +29,77 @@ DF <- list.files(path=path, pattern="^20[12].*rds$") %>%
 
 ```
 
+##  Look for nulls
+
+Looks like nulls fall into the derived geolocations, due to a failure of the
+geocoder to find the address. Looks like about 15% failure rate. Not too bad.
+
+```{r nulls}
+
+#   Nulls?
+
+DF %>%
+    map_df(function(x) sum(is.na(x))) %>%
+    gather(feature, num_nulls) %>%
+    print(n = 100)
+
+```
+
+
+##  Zipcode
+
+Look at zipcodes for issues. Looks okay.
+
+```{r zipcodes}
+
+sort(unique(DF$Zip))
+
+```
+
+##  Dates
+
+Look at Dates for issues. Looks okay.
+
+```{r date}
+
+sort(unique(DF$Date))
+
+```
+
+##  Permit type
+
+Look at Permit Type for issues. Looks okay.
+
+```{r permit type}
+
+sort(unique(DF$Permit_Type))
+
+```
+
+##   Fix Clutch City
+
+Census geocoder likes to put "Clutch City" instead of Houston for addresses downtown.
+Really irritating. We'll fix it.
+
+```{r clutch city}
+
+a <- DF %>% mutate(clutch=grepl("CLUTCH", match)) %>% select(clutch)
+sum(a$clutch)
+
+DF$match <- str_replace(DF$match, "CLUTCH CITY", "HOUSTON")
+
+```
+
+##  Save file
+
+Save out to a master file
+
+```{r save}
+
+saveRDS(DF, paste(path, "MasterPermits.rds"))
+
+```
+
+
 
 
