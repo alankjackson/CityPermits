@@ -12,7 +12,6 @@ library(ggplot2)
 library("lubridate")
 library(ggmap)
 
-apikey <- "***REMOVED***"
 
 
 #permits <- readRDS("~/Dropbox/Rprojects/CityPermits/StructuralPermits.rds")
