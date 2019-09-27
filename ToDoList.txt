@@ -1,0 +1,44 @@
+* 1. Clean up Clutch City crap
+
+2. Add SuperNeighborhood, and then add that code to cron job
+
+3. Create static neighborhood maps
+
+4. Implement in Shiny and deploy
+
+5. Add census data by neighborhood and by zip, then add code to cron job
+
+6. Create static zipcode maps
+
+7. Implement in Shiny and deploy
+
+8. add census data by block group, then add to cron job
+
+9. implement leaflet maps colored by block group
+
+
+- calculate solar panels per capita
+
+- build an income by census block database
+
+- build an income/age/race/education/etc by neighborhood dataframe
+
+--------------------------------
+Shiny page
+
+- allow selection by comment string :
+    user entry plus
+    Harvey, Solar, Demo, Cell Tower, 
+
+- select by neighborhood
+
+- select by week
+
+- select by zip
+
+- select by permit number
+
+- plot permits on a map
+
+- also have auxilliary plots: line plot of count vs time for selection, and count per capita vs time
+
