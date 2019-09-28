@@ -16,6 +16,9 @@
 
 9. implement leaflet maps colored by block group
 
+10. Use new geocoder (or google) to geocode PVT streets
+       ask Keith what PVT means
+
 
 - calculate solar panels per capita
 
@@ -28,7 +31,13 @@ Shiny page
 
 - allow selection by comment string :
     user entry plus
-    Harvey, Solar, Demo, Cell Tower, 
+    Harvey, Solar, Demo, Cell Tower, Repair, pool, SFR/S.F. RES/...,
+    emergency
+
+(EPR) S.F. RES W/ATT. GARAGE
+SF = single family
+res = residence
+epr = 
 
 - select by neighborhood
 
