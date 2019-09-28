@@ -1,0 +1,59 @@
+---
+title: "Add new fields"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+library(sf)
+
+googlecrs <- 4326
+
+path <- "/home/ajackson/Dropbox/Rprojects/CityPermits/"
+
+DF <- readRDS(paste0(path, "MasterPermits.rds"))
+
+#   mask out rows with bad coordinates
+maskcoord <- !(is.na(DF$lat) | is.na(DF$lon))
+sum(maskcoord)
+
+#  Create a temporary sf data frame for doing the intersects
+# set longitudes as the first column and latitudes as the second
+dat <- data.frame(Longitude=DF$lon[maskcoord], Latitude=DF$lat[maskcoord], match=DF$match[maskcoord], stringsAsFactors = FALSE)
+
+dat <- st_as_sf(dat, coords=c("Longitude", "Latitude"), crs=googlecrs, agr = "identity")
+
+
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Add New Fields
+
+Add the Superneighborhood, blockgroup, population, median age, and income by blockgroup (2016)
+Add population and median age by zipcode
+Add Gini index by tract
+
+```{r add superneighborhood}
+
+temp <- readRDS("~/Dropbox/CrimeStats/SuperNeighborhoodPolys.rds")
+#   find points in polygons
+#   since superneighborhoods don't overlap, let's just grab the array index
+#   instead of creating a huge matrix
+a <- st_intersects(dat, temp, sparse = TRUE)
+
+# Replace empty values with 89
+a <- unlist(replace(a, !sapply(a, length),89))
+# Now add super neighborhood 89 as NA
+temp[89,] <- temp[88,]
+temp$SNBNAME[89] <- NA
+
+#   Append the super neighborhood field to the data frame
+DF$SuperNeighborhood[maskcoord] <- temp$SNBNAME[a]
+
+#saveRDS(DF, "~/Dropbox/CrimeStats/MasterPermits.rds")
+
+
+```
+
