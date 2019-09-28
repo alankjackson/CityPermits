@@ -12,6 +12,8 @@ googlecrs <- 4326
 
 path <- "/home/ajackson/Dropbox/Rprojects/CityPermits/"
 
+censusdata <- "~/Dropbox/Rprojects/CensusDataframe/"
+
 DF <- readRDS(paste0(path, "MasterPermits.rds"))
 
 #   mask out rows with bad coordinates
@@ -47,7 +49,7 @@ a <- st_intersects(dat, temp, sparse = TRUE)
 a <- unlist(replace(a, !sapply(a, length),89))
 # Now add super neighborhood 89 as NA
 temp[89,] <- temp[88,]
-temp$SNBNAME[89] <- NA
+temp$SNBNAME[89] <- "None"
 
 #   Append the super neighborhood field to the data frame
 DF$SuperNeighborhood[maskcoord] <- temp$SNBNAME[a]
@@ -56,4 +58,52 @@ DF$SuperNeighborhood[maskcoord] <- temp$SNBNAME[a]
 
 
 ```
+
+##   Create blockgroup and then add appropriate fields
+
+Files are:
+- HarrisCounty_", yr, ".rds" for 5YR age, race, median income data. yr=10-16
+We'll use 2016 as our go to year
+
+
+```{r blockgroup}
+
+Census <- readRDS(paste0(censusdata, "CensusData/HarrisCounty_16.rds"))
+
+#   Create full block group codes state (48), county (201), tract (6 numbers), blockgroup (1 number)
+
+Census %>% mutate(BlockGrp=paste0("48201", Tract, BlkGrp)) -> Census
+
+DF %>% mutate(BlockGrp=str_sub(block, start=0, end=12)) -> DF
+
+DF <- left_join(DF, Census, by="BlockGrp")
+
+
+
+```
+
+##    Add Gini index by tract
+
+```{r Gini}
+
+infile <- "~/Dropbox/Rprojects/CensusDataframe/CensusData/HarrisCounty_Gini_2016.rds"
+
+gini <- readRDS(infile)
+
+DF <- left_join(DF, gini)
+
+saveRDS(DF, "~/Dropbox/CrimeStats/MasterPermits_toGini.rds")
+
+```
+
+
+
+
+
+
+
+
+
+
+
 
