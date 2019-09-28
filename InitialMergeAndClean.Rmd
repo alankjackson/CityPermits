@@ -25,7 +25,7 @@ DF <- list.files(path=path, pattern="^20[12].*rds$") %>%
   rename(Description=Comments, Date=Permit_Date) %>% 
   mutate(Date=as.Date(Date, format= "%Y/%m/%d"),
          lat=as.numeric(lat),
-         lon=as.numeric(lat))
+         lon=as.numeric(lon))
 
 ```
 
