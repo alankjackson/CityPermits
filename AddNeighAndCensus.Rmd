@@ -34,7 +34,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Add New Fields
 
 Add the Superneighborhood, blockgroup, population, median age, and income by blockgroup (2016)
-Add population and median age by zipcode
+Add population and median age by zipcode - or maybe not.
 Add Gini index by tract
 
 ```{r add superneighborhood}
@@ -95,6 +95,8 @@ DF <- left_join(DF, gini)
 saveRDS(DF, "~/Dropbox/CrimeStats/MasterPermits_toGini.rds")
 
 ```
+
+
 
 
 
