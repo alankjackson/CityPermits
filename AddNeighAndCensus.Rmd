@@ -39,7 +39,8 @@ Add Gini index by tract
 
 ```{r add superneighborhood}
 
-temp <- readRDS("~/Dropbox/CrimeStats/SuperNeighborhoodPolys.rds")
+temp <- readRDS("~/Dropbox/CrimeStats/SuperNeighborhoodPolys.rds") %>% 
+  mutate(SNBNAME=str_to_title(SNBNAME))
 #   find points in polygons
 #   since superneighborhoods don't overlap, let's just grab the array index
 #   instead of creating a huge matrix
@@ -90,9 +91,21 @@ infile <- "~/Dropbox/Rprojects/CensusDataframe/CensusData/HarrisCounty_Gini_2016
 
 gini <- readRDS(infile)
 
-DF <- left_join(DF, gini)
+DF <- left_join(DF, gini, by="tract")
 
-saveRDS(DF, "~/Dropbox/CrimeStats/MasterPermits_toGini.rds")
+saveRDS(DF, paste0(path, "MasterPermits_toGini.rds"))
+
+```
+
+
+##      Calculate centroids for zipcodes and superneighborhoods
+
+```{r centroids}
+
+temp <- 
+st_centroid(temp)  
+
+saveRDS(temp, "~/Dropbox/CrimeStats/SuperNeighborhoodCentroids.rds") 
 
 ```
 
