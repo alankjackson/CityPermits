@@ -100,6 +100,24 @@ saveRDS(DF, paste0(path, "/MasterPermits.rds"))
 
 ```
 
+##    Make Icon file
+
+```{r icons}
+
+colorIcons <- iconList(
+  blue = makeIcon("~/Dropbox/Rprojects/CityPermits/marker-icon-blue.png"),  
+  black = makeIcon("~/Dropbox/Rprojects/CityPermits/marker-icon-black.png"),  
+  green = makeIcon("~/Dropbox/Rprojects/CityPermits/marker-icon-green.png"),  
+  grey = makeIcon("~/Dropbox/Rprojects/CityPermits/marker-icon-grey.png"),  
+  red = makeIcon("~/Dropbox/Rprojects/CityPermits/marker-icon-red.png"),  
+  violet = makeIcon("~/Dropbox/Rprojects/CityPermits/marker-icon-violet.png"),  
+  yellow = makeIcon("~/Dropbox/Rprojects/CityPermits/marker-icon-yellow.png")  
+  )
+
+saveRDS(colorIcons, "~/Dropbox/Rprojects/CityPermits/colorIcons.rds")
+
+```
+
 
 
 
