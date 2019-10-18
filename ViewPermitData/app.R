@@ -14,6 +14,11 @@ library(shiny)
 library(tidyverse)
 library(leaflet)
 library(leafpop) # for popup on map
+library(sf)
+library(htmltools)
+library(lubridate)
+library(shinyWidgets)
+library(DT)
 
 
 ###################################
@@ -27,6 +32,7 @@ DataLocation <- "https://www.ajackson.org/Permits/data/"
 #   Tibble database
 
 DF <- readRDS(gzcon(url(paste0(DataLocation, "MasterPermits_toGini.rds"))))
+df <- DF %>% filter(!is.na(lat)) 
 
 MapCenter <- c(-95.363345, 29.756555) # center on downtown
 
@@ -34,9 +40,31 @@ init_zoom <- 14
 
 NeighborCentroids <- readRDS(gzcon(url(paste0(DataLocation, 
                                               "SuperNeighborhoodCentroids.rds"))))
+#   Add the -All- neighborhood, centered on downtown
+All <- tribble(~SNBNAME, ~lat, ~lon,
+               "-All-", MapCenter[2], MapCenter[1])
+All <- st_as_sf(All, coords=c('lon', 'lat'), crs=4326)
 
-Superneighborhoods <- NeighborCentroids$SNBNAME 
+NeighborCentroids <- rbind(NeighborCentroids, All)
 
+Superneighborhoods <- str_sort(NeighborCentroids$SNBNAME) 
+
+Zips <- readRDS(gzcon(url(paste0(DataLocation, 
+                                 "ZipcodeCentroids.rds"))))
+Zipsonly <- Zips$Zip
+
+minDate <- min(DF$Date)
+maxDate <- max(DF$Date)
+
+colorIcons <- iconList(
+  blue = makeIcon(paste0(DataLocation,"../marker-icon-blue.png")),  
+  black = makeIcon(paste0(DataLocation,"../marker-icon-back.png")),  
+  green = makeIcon(paste0(DataLocation,"../marker-icon-green.png")),  
+  grey = makeIcon(paste0(DataLocation,"../marker-icon-grey.png")),  
+  red = makeIcon(paste0(DataLocation,"../marker-icon-red.png")),  
+  violet = makeIcon(paste0(DataLocation,"../marker-icon-violet.png")),  
+  yellow = makeIcon(paste0(DataLocation,"../marker-icon-yellow.png"))  
+)
 
 ##################################################
 # Define UI for displaying and annotating photos
@@ -47,34 +75,82 @@ shinyApp(
         fluidRow(
             column(width = 8,
                    leafletOutput("LocalMap"),
+                   HTML("<hr>"),
+                   #        Data Table
+                   div(DT::dataTableOutput("table"), style = "font-size:80%"),
+                   #DT::dataTableOutput('table'),
                    HTML("<hr>")
                    #   put ggplot graphic here
             ),
             
             #       Add right column with controls for display
-            column(width = 2,
-                   #    Select Neighborhood
-                   selectInput("nbhd", "Choose a Neighborhood:",
-                               Superneighborhoods,
-                               selected="Downtown"
+            column(width = 3,
+                   #    Select type of geographic selection
+                   radioButtons("geography", label = strong("Which Geography?"),
+                                choices = list("Nbhd" = "SNbhd", "Zip Code" = "Zip"), 
+                                selected = "SNbhd",
+                                width='90%',
+                                inline=TRUE),
+                   conditionalPanel(
+                     #    Select Neighborhood
+                     condition = "input.geography == 'SNbhd'",
+                     selectInput("nbhd", "Choose a Neighborhood:",
+                                 Superneighborhoods,
+                                 selected="Downtown" )
                    ),
-##########################   stopped here
-                   checkboxGroupInput("quality", label = "Sidewalk qualities to display",
-                                      choices = list("Good"="Good", 
-                                                     "Bushes"="Bushes", 
-                                                     "Gap"="Gap",  
-                                                     "Offset"="Offset", 
-                                                     "Shattered"="Shattered", 
-                                                     "Obstructed"="Obstructed", 
-                                                     "Debris/Mud"="Debris/Mud", 
-                                                     "Gravel"="Gravel", 
-                                                     "No Curb Cut"="No Curb Cut", 
-                                                     "Missing"="Missing"),
-                                      selected = "Good" ),
-                   #    Select or unselect all
+                   conditionalPanel( 
+                     #    Select Zip
+                     condition = "input.geography == 'Zip'",
+                     selectInput("ZipCode", label="Choose a Zip Code:",
+                                 Zips$Zip,
+                                 selected="77002")
+                   ),
                    HTML("<hr>"),
-                   actionButton("selectAll", label = "Select All"),
-                   actionButton("deselectAll", label = "Deselect All") ,
+                   sliderInput('dateRange', label='Date range (drag from middle):',
+                               min = minDate,
+                               max = maxDate,
+                               value=c(maxDate-7, maxDate),
+                               dragRange=TRUE,
+                               animate=TRUE,
+                               step=7),
+                   
+                   HTML("<hr>"),
+                   #    Select type of filter selection
+                   radioButtons("filter", label = strong("Which Filter Type?"),
+                                choices = list("Standard" = "Std", "Arbitrary" = "Arb"), 
+                                selected = "Std",
+                                width='90%',
+                                inline=TRUE),
+                   conditionalPanel(
+                     #    Select Standard Filter
+                     condition = "input.filter == 'Std'",
+                     radioButtons("std_search", label = "Standard Filters",
+                                  choices = list("Harvey"="HARVEY", 
+                                                 "Solar"="SOLAR", 
+                                                 "Demolition"="DEMO",  
+                                                 "Repair"="REPAIR", 
+                                                 "Pool"="POOL", 
+                                                 "Residence"="SFR|S\\.F\\. RES", 
+                                                 "All"="All"),
+                                  selected = "All" )
+                   ),
+                   conditionalPanel( 
+                     #    Select Zip
+                     condition = "input.filter == 'Arb'",
+                     searchInput(
+                       inputId = "arb_search", label = "Enter filter text (regular expression)",
+                       placeholder = "CELL TOWER",
+                       btnSearch = icon("search"),
+                       btnReset = icon("remove"),
+                       width = "100%"
+                     )
+                   ),
+                   
+##########################   stopped here
+                   #    Select or unselect all
+                  # HTML("<hr>"),
+                  # actionButton("selectAll", label = "Select All"),
+                  # actionButton("deselectAll", label = "Deselect All") ,
                    HTML("<hr>")
             )
         ) # fluidRow
@@ -92,20 +168,82 @@ shinyApp(
         ##################################
         output$LocalMap <- renderLeaflet({
             #   Basemap
+          if (input$geography=="SNbhd") {
             ll <- st_coordinates(NeighborCentroids[NeighborCentroids$SNBNAME==input$nbhd,]$geometry)
-            leaflet(DF) %>% 
+            init_zoom <- 14
+          } else {
+            ll <- st_coordinates(Zips[Zips$Zip==input$ZipCode,]$Shape)
+            init_zoom <- 14
+          }
+            leaflet(df) %>% 
                 setView(lng = ll[1] , lat = ll[2], zoom = init_zoom ) %>%   
                 addTiles()
         }) 
-        
         ##################################
-        #           Lines
+        #           Add points
         ##################################
+        observe({
+          # Clear old stuff off of map
+          leafletProxy("LocalMap") %>% 
+              clearMarkers()  
+          # Filter down to what is selected
+          #     Geography
+          dftemp <- df %>% 
+            #select(Date, Permit_Number, Address, Description) %>% 
+            {if (input$geography=="SNbhd") filter(., df$SuperNeighborhood==input$nbhd) else .} %>% 
+            {if (input$geography=="Zip")   filter(., df$Zip==input$ZipCode) else .}
+          #     -All- neighborhood
+          if(input$geography=="SNbhd" & input$nbhd=="-All-") {
+            dftemp <- df
+          }
+          #     Date - with an elaborate dance to alway window a weeks worth
+          dftemp <- dftemp %>%
+            filter(between(Date, min(input$dateRange[1], input$dateRange[2]-7), 
+                                 max(input$dateRange[2], input$dateRange[1]+7)))
+          #     Standard search on Description
+          if (input$std_search != "All" & input$filter=="Std"){
+            dftemp <- dftemp %>% 
+              filter(grepl(input$std_search, Description))
+          }
+          #     Arbitrary search on Description
+          if (input$filter=="Arb"){
+            dftemp <- dftemp %>% 
+              filter(grepl(input$arb_search, Description, ignore.case=TRUE))
+          }
+          
+          #     Add rownumber index
+          dftemp <- tibble::rowid_to_column(dftemp, "ID")
+          
+          #     If markers > 1000, refuse to draw. It takes too long.
+          if (nrow(dftemp)>1000){
+            showNotification("More than 1000 markers. Too many - app would be very slow",
+                             type="warning")
+          }
+          #     Draw markers if there are any to draw
+          #     and data table
+          if (nrow(dftemp)>0 & nrow(dftemp)<=1000){
+             leafletProxy("LocalMap") %>% 
+               addMarkers(dftemp$lon, dftemp$lat, label=htmlEscape(dftemp$Description))
+            #   add red markers if selected in table
+            #ids <- input$table_rows_selected
+            #if (length(ids)>0){
+              #print(paste("--1-- ids ", ids))
+              #print(paste("--2-- lon ", dftemp[ids,]$lon))
+             #leafletProxy("LocalMap") %>% 
+            #  addMarkers(dftemp[ids,]$lon, dftemp[ids,]$lat, label=htmlEscape(dftemp[ids,]$Description),
+              #            icon=colorIcons["red"])
+            #}
+            output$table <- DT::renderDataTable(dftemp[, c("ID",
+                                                           "Date", 
+                                                           "Permit_Number", 
+                                                           "Address", 
+                                                           "Description")],
+                                                server=TRUE)
+        ###output$table = DT::renderDataTable(df, server = FALSE)
+        ###output$y12 = renderPrint(input$x12_rows_selected)
+          }
+        })
 #        observe({
-#            #   Polylines (done in a loop to keep them from connecting)
-#            #   scale width of lines in concert with zoom scale
-#            wgt <- max(2,floor(2*(input$LocalMap_zoom-init_zoom)+0.5) + init_weight)
-#            #print(paste("weight:",wgt))
 #            if (!is.null(input$quality)){
 #                leafletProxy("LocalMap") %>% 
 #                    clearShapes()  
