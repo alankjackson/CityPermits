@@ -25,7 +25,7 @@ permits <- list.files(path="~/Rprojects/CityPermits",
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Basic statistics
+## Basic statistics 
 
 
 ```{r basic stats}
