@@ -102,10 +102,22 @@ saveRDS(DF, paste0(path, "MasterPermits_toGini.rds"))
 
 ```{r centroids}
 
-temp <- 
+a <- 
 st_centroid(temp)  
 
-saveRDS(temp, "~/Dropbox/CrimeStats/SuperNeighborhoodCentroids.rds") 
+saveRDS(a, "~/Dropbox/CrimeStats/SuperNeighborhoodCentroids.rds") 
+
+#   All texas zips
+temp <- readRDS(file = "~/Dropbox/Rprojects/CensusDataframe/ZCTA_polygons_2016.rds")
+
+#   strip down to Houston only
+
+temp <- temp %>% rename(Zip=ZCTA5CE10)
+temp <- left_join(DF,temp, by="Zip")
+a <- temp[!duplicated(temp$Zip),] %>% select(Zip, Shape)
+a <- st_sf(a)
+a <- st_centroid(a)
+saveRDS(a, "~/Dropbox/CrimeStats/ZipcodeCentroids.rds") 
 
 ```
 
