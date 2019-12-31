@@ -31,7 +31,8 @@ DataLocation <- "https://www.ajackson.org/Permits/data/"
 
 #   Tibble database
 
-DF <- readRDS(gzcon(url(paste0(DataLocation, "MasterPermits_toGini.rds"))))
+#DF <- readRDS(gzcon(url(paste0(DataLocation, "MasterPermits_toGini.rds"))))
+DF <- readRDS(gzcon(url(paste0(DataLocation, "MasterPermits.rds"))))
 df <- DF %>% filter(!is.na(lat)) 
 
 MapCenter <- c(-95.363345, 29.756555) # center on downtown
@@ -57,13 +58,13 @@ minDate <- min(DF$Date)
 maxDate <- max(DF$Date)
 
 colorIcons <- iconList(
-  blue = makeIcon(paste0(DataLocation,"../marker-icon-blue.png")),  
-  black = makeIcon(paste0(DataLocation,"../marker-icon-back.png")),  
-  green = makeIcon(paste0(DataLocation,"../marker-icon-green.png")),  
-  grey = makeIcon(paste0(DataLocation,"../marker-icon-grey.png")),  
-  red = makeIcon(paste0(DataLocation,"../marker-icon-red.png")),  
-  violet = makeIcon(paste0(DataLocation,"../marker-icon-violet.png")),  
-  yellow = makeIcon(paste0(DataLocation,"../marker-icon-yellow.png"))  
+  blue = makeIcon(gzcon(url(paste0(DataLocation,"../marker-icon-blue.png")))),  
+  black = makeIcon(gzcon(url(paste0(DataLocation,"../marker-icon-back.png")))),  
+  green = makeIcon(gzcon(url(paste0(DataLocation,"../marker-icon-green.png")))),  
+  grey = makeIcon(gzcon(url(paste0(DataLocation,"../marker-icon-grey.png")))),  
+  red = makeIcon(gzcon(url(paste0(DataLocation,"../marker-icon-red.png")))),  
+  violet = makeIcon(gzcon(url(paste0(DataLocation,"../marker-icon-violet.png")))),  
+  yellow = makeIcon(gzcon(url(paste0(DataLocation,"../marker-icon-yellow.png"))))  
 )
 
 ##################################################
@@ -225,14 +226,14 @@ shinyApp(
              leafletProxy("LocalMap") %>% 
                addMarkers(dftemp$lon, dftemp$lat, label=htmlEscape(dftemp$Description))
             #   add red markers if selected in table
-            #ids <- input$table_rows_selected
-            #if (length(ids)>0){
-              #print(paste("--1-- ids ", ids))
-              #print(paste("--2-- lon ", dftemp[ids,]$lon))
-             #leafletProxy("LocalMap") %>% 
-            #  addMarkers(dftemp[ids,]$lon, dftemp[ids,]$lat, label=htmlEscape(dftemp[ids,]$Description),
-              #            icon=colorIcons["red"])
-            #}
+            ids <- input$table_rows_selected
+            if (length(ids)>0){
+              print(paste("--1-- ids ", ids))
+              print(paste("--2-- lon ", dftemp[ids,]$lon))
+             leafletProxy("LocalMap") %>% 
+              addMarkers(dftemp[ids,]$lon, dftemp[ids,]$lat, label=htmlEscape(dftemp[ids,]$Description),
+                          icon=colorIcons["red"])
+            }
             output$table <- DT::renderDataTable(dftemp[, c("ID",
                                                            "Date", 
                                                            "Permit_Number", 
