@@ -146,6 +146,13 @@ shinyApp(
                        width = "100%"
                      )
                    ),
+                   HTML("<hr>"),
+                   HTML("<p>Data downloaded weekly on Tuesday evenings
+                        from the city of Houston website</p>"),
+                   HTML("<p>Note that about 10% of the permits are missing
+                        due to a failure to geocode the location.</p>"),
+                   HTML("<p>Two weeks of data are missing:
+                        29 Oct 2018 through 12 Nov 2018.</p>"),
                    
 ##########################   stopped here
                    #    Select or unselect all
