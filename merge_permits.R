@@ -23,7 +23,7 @@ path <- "/home/ajackson/mirrors/ajackson/Permits/data"
 
 DF <- list.files(path=inpath, pattern="^20[12].*rds$") %>%
   purrr::set_names(.) %>%
-  map_dfr(readRDS) %>%
+  map_dfr(~ readRDS(file.path(inpath, .))) %>%
   rename(Description=Comments, Date=Permit_Date) %>% 
   mutate(Date=as.Date(Date, format= "%Y/%m/%d"),
          lat=as.numeric(lat),
