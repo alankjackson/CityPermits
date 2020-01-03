@@ -87,10 +87,7 @@ rpt <- rpt %>%
 
 names(rpt) <- c("Zip", "Permit_Date", "Permit_Type", "Permit_Number", "Address", "Comments")
 
-
-
 ## Geocode the addresses
-
 
 rpt$match <- NA
 rpt$lat <- NA
@@ -124,7 +121,6 @@ for (i in 1:nrow(rpt)) {
 rpt$match <- str_replace(rpt$match, "CLUTCH CITY", "HOUSTON")
 
 ## Save output
-
 
 outputfile <- paste(Start_Date,End_Date,sep="_")
 outputfile <- str_replace_all(outputfile,"/","_")
