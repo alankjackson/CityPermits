@@ -204,7 +204,7 @@ shinyApp(
           if(input$geography=="SNbhd" & input$nbhd=="-All-") {
             dftemp <- df
           }
-          #     Date - with an elaborate dance to alway window a weeks worth
+          #     Date - with an elaborate dance to always window a weeks worth
           dftemp <- dftemp %>%
             filter(between(Date, min(input$dateRange[1], input$dateRange[2]-7), 
                                  max(input$dateRange[2], input$dateRange[1]+7)))
@@ -230,6 +230,7 @@ shinyApp(
           #     Draw markers if there are any to draw
           #     and data table
           if (nrow(dftemp)>0 & nrow(dftemp)<=1000){
+            print("draw markers")
              leafletProxy("LocalMap") %>% 
                addMarkers(dftemp$lon, dftemp$lat, label=htmlEscape(dftemp$Description))
             #   add red markers if selected in table
